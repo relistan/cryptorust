@@ -25,8 +25,10 @@ fn as_hex(data: ~[u8]) -> ~str {
 fn sha1(data: ~str) -> ~str {
 	unsafe {
 		let bytes = str::to_bytes(data);
-		let hash = crypto::SHA1(vec::raw::to_ptr(bytes),
-								bytes.len() as libc::c_uint, ptr::null());
+		let hash = crypto::SHA1(
+			vec::raw::to_ptr(bytes),
+			bytes.len() as libc::c_uint, ptr::null()
+		);
 		as_hex(vec::from_buf(hash, 20))
 	}
 }
@@ -34,15 +36,17 @@ fn sha1(data: ~str) -> ~str {
 fn md5(data: ~str) -> ~str {
 	unsafe {
 		let bytes = str::to_bytes(data);
-		let hash = crypto::MD5(vec::raw::to_ptr(bytes),
-								bytes.len() as libc::c_uint, ptr::null());
+		let hash = crypto::MD5(
+			vec::raw::to_ptr(bytes),
+			bytes.len() as libc::c_uint, ptr::null()
+		);
 		as_hex(vec::from_buf(hash, 16))
 	}
 }
 
 fn hmac(engine: HashEngine, key: ~str, data: ~str) -> ~str {
 	unsafe {
-		let mut digest = str::to_bytes(~"0123456789012345678901234567890123456789");
+		let mut digest = vec::from_elem(40, 0);
 		let key_bytes  = str::to_bytes(key);
 		let data_bytes = str::to_bytes(data);
 
@@ -53,7 +57,6 @@ fn hmac(engine: HashEngine, key: ~str, data: ~str) -> ~str {
 			data_bytes.len() as libc::size_t,
 			vec::raw::to_ptr(digest)
 		);
-		println(fmt!("---%?----\n", result_size));
 
 		let result = str::from_bytes(digest);
 		result.slice(0, result_size as uint).to_owned()
