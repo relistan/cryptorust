@@ -21,7 +21,7 @@ u_int32_t wrap_HMAC(hmac_engine_t method, char *key, size_t key_size, char *data
 
 	unsigned char *digest = HMAC(hash_engine, key, key_size, (unsigned char *)data, size, NULL, NULL);
 
-    for(int i = 0; i < digest_size; i++) {
+	for(int i = 0; i < digest_size; i++) {
 		sprintf(&target[i * 2], "%02x", (unsigned int)digest[i]);
 	}
 	target[result_size] = '\0';
