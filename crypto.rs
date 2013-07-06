@@ -22,25 +22,26 @@ fn as_hex(data: ~[u8]) -> ~str {
 	return acc;
 }
 
-fn sha1(data: ~str) -> ~str {
+fn hash(data: ~str, hash_func: &fn(*u8, libc::c_uint, *u8) -> *u8, len: uint) -> ~str {
 	unsafe {
 		let bytes = str::to_bytes(data);
-		let hash = crypto::SHA1(
+		let hash = hash_func(
 			vec::raw::to_ptr(bytes),
 			bytes.len() as libc::c_uint, ptr::null()
 		);
-		as_hex(vec::from_buf(hash, 20))
+		as_hex(vec::from_buf(hash, len))
+	}
+}
+
+fn sha1(data: ~str) -> ~str {
+	unsafe {
+		hash(data, crypto::SHA1, 20)
 	}
 }
 
 fn md5(data: ~str) -> ~str {
 	unsafe {
-		let bytes = str::to_bytes(data);
-		let hash = crypto::MD5(
-			vec::raw::to_ptr(bytes),
-			bytes.len() as libc::c_uint, ptr::null()
-		);
-		as_hex(vec::from_buf(hash, 16))
+		hash(data, crypto::MD5, 16)
 	}
 }
 
