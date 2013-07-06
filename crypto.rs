@@ -41,22 +41,23 @@ fn md5(data: ~str) -> ~str {
 }
 
 fn hmac(engine: HashEngine, key: ~str, data: ~str) -> ~str {
-	let hmac = unsafe {
+	unsafe {
 		let mut digest = str::to_bytes(~"0123456789012345678901234567890123456789");
 		let key_bytes  = str::to_bytes(key);
 		let data_bytes = str::to_bytes(data);
 
-		cryptobindings::wrap_HMAC(engine, 
+		let result_size = cryptobindings::wrap_HMAC(engine, 
 			vec::raw::to_ptr(key_bytes),
 			key_bytes.len() as libc::size_t,
 			vec::raw::to_ptr(data_bytes),
 			data_bytes.len() as libc::size_t,
 			vec::raw::to_ptr(digest)
 		);
+		println(fmt!("---%?----\n", result_size));
 
-		str::from_bytes(digest).clone()
-	};
-	hmac
+		let result = str::from_bytes(digest);
+		result.slice(0, result_size as uint).to_owned()
+	}
 }
 
 fn main() {
