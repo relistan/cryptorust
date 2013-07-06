@@ -1,4 +1,4 @@
 #!/bin/sh
 clang -Wno-deprecated-declarations cryptobindings.c -g3 -std=c99 -c
-clang -shared -Wl -o cryptobindings.so cryptobindings.o -lcrypto
+clang -shared -Wl -o libcryptobindings.dylib cryptobindings.o -lcrypto
 rustc -L `pwd` --test crypto.rs
