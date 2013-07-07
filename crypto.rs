@@ -57,12 +57,10 @@ fn hmac_md5(key: ~str, message: ~str) -> ~Digest {
 
 fn hmac(key: ~str, message: ~str, block_size: uint, hash_func: &fn(~[u8]) -> ~Digest) -> ~Digest {
 
-  let computed_key: &str = if key.len() > block_size {
-    hash_func(key.to_bytes()).hexdigest() // TODO this should be .digest more likely
-  } else if key.len() < block_size {
-    key + str::from_bytes(vec::from_elem(block_size - key.len(), 0))
-  } else {
-    key
+  let computed_key: &str = match key.len() {
+    _ if key.len() > block_size => hash_func(key.to_bytes()).hexdigest(), // TODO this should be .digest more likely
+    _ if key.len() < block_size => key + str::from_bytes(vec::from_elem(block_size - key.len(), 0)),
+    _ => key
   };
 
   let o_key_pad = xor_with(computed_key, 0x5c);
