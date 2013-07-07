@@ -78,39 +78,27 @@ impl Digest {
 }
 
 fn sha1(data: ~[u8]) -> ~Digest {
-  unsafe {
-    HashEngine::new(SHA1).hash(data)
-  }
+  HashEngine::new(SHA1).hash(data)
 }
 
 fn sha224(data: ~[u8]) -> ~Digest {
-  unsafe {
-    HashEngine::new(SHA224).hash(data)
-  }
+  HashEngine::new(SHA224).hash(data)
 }
 
 fn sha256(data: ~[u8]) -> ~Digest {
-  unsafe {
-    HashEngine::new(SHA256).hash(data)
-  }
+  HashEngine::new(SHA256).hash(data)
 }
 
 fn sha384(data: ~[u8]) -> ~Digest {
-  unsafe {
-    HashEngine::new(SHA384).hash(data)
-  }
+  HashEngine::new(SHA384).hash(data)
 }
 
 fn sha512(data: ~[u8]) -> ~Digest {
-  unsafe {
-    HashEngine::new(SHA512).hash(data)
-  }
+  HashEngine::new(SHA512).hash(data)
 }
 
 fn md5(data: ~[u8]) -> ~Digest {
-  unsafe {
-    HashEngine::new(MD5).hash(data)
-  }
+  HashEngine::new(MD5).hash(data)
 }
 
 fn hmac_md5(key: ~str, message: ~str) -> ~Digest {
