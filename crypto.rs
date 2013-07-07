@@ -19,7 +19,7 @@ extern mod cryptobindings {
 fn as_hex(data: ~[u8]) -> ~str {
 	let mut acc = ~"";
 	for data.each |&byte| { acc += fmt!("%02x", byte as uint); }
-	return acc;
+	acc
 }
 
 fn hash(data: ~str, hash_func: &fn(*u8, libc::c_uint, *u8) -> *u8, len: uint) -> ~str {
