@@ -18,7 +18,7 @@ struct HashEngine {
 }
 
 impl HashEngine {
-  fn by_name(engine: HashMethod) -> ~HashEngine {
+  fn new(engine: HashMethod) -> ~HashEngine {
     unsafe {
       match engine {
         MD5    => ~HashEngine{ engine: crypto::MD5,    digest_size: 16, block_size: 64  },
@@ -45,6 +45,24 @@ impl HashEngine {
       }
     )
   }
+
+  fn hmac(&self, key: ~str, message: ~str) -> ~Digest {
+    let computed_key: &str = match key.len() {
+      _ if key.len() > self.block_size => self.hash(key.to_bytes()).hexdigest(), // TODO this should be .digest more likely
+      _ if key.len() < self.block_size => key + str::from_bytes(vec::from_elem(self.block_size - key.len(), 0)),
+      _ => key
+    };
+  
+    let o_key_pad = HashEngine::xor_with(computed_key, 0x5c);
+    let i_key_pad = HashEngine::xor_with(computed_key, 0x36);
+    let bytes = message.to_bytes();
+  
+    self.hash(o_key_pad + self.hash(i_key_pad + bytes).digest)
+  }
+
+  priv fn xor_with(subject: &str, val: u8) -> ~[u8] {
+    do subject.to_bytes().map |&c| { val ^ c }
+  }
 }
 
 struct Digest { digest: ~[u8] }
@@ -59,91 +77,56 @@ impl Digest {
   }
 }
 
-fn hash(engine_name: HashMethod, data: ~[u8]) -> ~Digest {
-  let details   = HashEngine::by_name(engine_name);
-  let hash_func = details.engine;
-
-  Digest::new(
-    unsafe {
-      vec::from_buf(
-        hash_func(
-          vec::raw::to_ptr(data),
-          data.len() as libc::c_uint, ptr::null()
-        ),
-        details.digest_size
-      )
-    }
-  )
-}
-
 fn sha1(data: ~[u8]) -> ~Digest {
   unsafe {
-    HashEngine::by_name(SHA1).hash(data)
+    HashEngine::new(SHA1).hash(data)
   }
 }
 
 fn sha224(data: ~[u8]) -> ~Digest {
   unsafe {
-    HashEngine::by_name(SHA224).hash(data)
+    HashEngine::new(SHA224).hash(data)
   }
 }
 
 fn sha256(data: ~[u8]) -> ~Digest {
   unsafe {
-    HashEngine::by_name(SHA256).hash(data)
+    HashEngine::new(SHA256).hash(data)
   }
 }
 
 fn sha384(data: ~[u8]) -> ~Digest {
   unsafe {
-    HashEngine::by_name(SHA384).hash(data)
+    HashEngine::new(SHA384).hash(data)
   }
 }
 
 fn sha512(data: ~[u8]) -> ~Digest {
   unsafe {
-    HashEngine::by_name(SHA512 ).hash(data)
+    HashEngine::new(SHA512).hash(data)
   }
 }
 
 fn md5(data: ~[u8]) -> ~Digest {
   unsafe {
-    HashEngine::by_name(MD5).hash(data)
+    HashEngine::new(MD5).hash(data)
   }
 }
 
-fn xor_with(subject: &str, val: u8) -> ~[u8] {
-  do subject.to_bytes().map |&c| { val ^ c }
-}
-
 fn hmac_md5(key: ~str, message: ~str) -> ~Digest {
-  hmac(key, message, 64, md5)
+  HashEngine::new(MD5).hmac(key, message)
 }
 
 fn hmac_sha1(key: ~str, message: ~str) -> ~Digest {
-  hmac(key, message, 64, sha1)
+  HashEngine::new(SHA1).hmac(key, message)
 }
 
 fn hmac_sha256(key: ~str, message: ~str) -> ~Digest {
-  hmac(key, message, 64, sha256)
+  HashEngine::new(SHA256).hmac(key, message)
 }
 
 fn hmac_sha512(key: ~str, message: ~str) -> ~Digest {
-  hmac(key, message, 128, sha512)
-}
-
-fn hmac(key: ~str, message: ~str, block_size: uint, hash_func: &fn(~[u8]) -> ~Digest) -> ~Digest {
-  let computed_key: &str = match key.len() {
-    _ if key.len() > block_size => hash_func(key.to_bytes()).hexdigest(), // TODO this should be .digest more likely
-    _ if key.len() < block_size => key + str::from_bytes(vec::from_elem(block_size - key.len(), 0)),
-    _ => key
-  };
-
-  let o_key_pad = xor_with(computed_key, 0x5c);
-  let i_key_pad = xor_with(computed_key, 0x36);
-  let bin_message = message.to_bytes();
-
-  hash_func(o_key_pad + hash_func(i_key_pad + bin_message).digest)
+  HashEngine::new(SHA512).hmac(key, message)
 }
 
 fn main() {
@@ -162,7 +145,23 @@ fn test_md5() {
 }
 
 #[test]
-fn test_hmac_sha1() {
+fn test_hmac_sha1_with_a_40_byte_key() {
+  assert_eq!(
+    hmac_sha1(~"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", ~"some data to hmac").hexdigest(), 
+    ~"18f652f1bced11930d55a72ad60bb5e671573dec"
+  )
+}
+
+#[test]
+fn test_hmac_sha1_with_a_too_long_key() {
+  assert_eq!(
+    hmac_sha1(~"keyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", ~"some data to hmac").hexdigest(), 
+    ~"64109bfc49893757afcc3c0c80b8eb61ce0f60a5"
+  )
+}
+
+#[test]
+fn test_hmac_sha1_with_a_too_short_key() {
   assert_eq!(
     hmac_sha1(~"my key", ~"some data to hmac").hexdigest(), 
     ~"331c9bf4d7dc8ad7e9bab2f566c8612042a9f4e2"
