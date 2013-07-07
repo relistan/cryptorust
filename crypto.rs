@@ -9,21 +9,30 @@ extern mod crypto {
   fn SHA512(src: *u8, sz: libc::c_uint, out: *u8) -> *u8;
 }
 
-enum HashEngine { MD5, SHA1, SHA224, SHA256, SHA384, SHA512 }
+enum HashMethod { MD5, SHA1, SHA224, SHA256, SHA384, SHA512 }
 
-struct Digest { digest: ~[u8] }
-
-impl Digest {
-    fn new(digest: ~[u8]) -> ~Digest { return ~Digest{ digest: digest } }
-
-    fn hexdigest(&self) -> ~str {
-        let mut acc = ~"";
-        for self.digest.each |&byte| { acc += fmt!("%02x", byte as uint); }
-        acc
-    }
+struct HashEngine {
+  engine:      (extern unsafe fn(*u8, libc::c_uint, *u8) -> *u8),
+  digest_size: uint,
+  block_size:  uint
 }
 
-fn hash(data: ~[u8], hash_func: &fn(*u8, libc::c_uint, *u8) -> *u8, len: uint) -> ~Digest {
+impl HashEngine {
+  fn by_name(engine: HashMethod) -> ~HashEngine {
+    unsafe {
+      match engine {
+        MD5    => ~HashEngine{ engine: crypto::MD5,    digest_size: 16, block_size: 64  },
+        SHA1   => ~HashEngine{ engine: crypto::SHA1,   digest_size: 20, block_size: 64  },
+        SHA224 => ~HashEngine{ engine: crypto::SHA224, digest_size: 28, block_size: 64  },
+        SHA256 => ~HashEngine{ engine: crypto::SHA256, digest_size: 32, block_size: 64  },
+        SHA384 => ~HashEngine{ engine: crypto::SHA384, digest_size: 48, block_size: 64  },
+        SHA512 => ~HashEngine{ engine: crypto::SHA512, digest_size: 64, block_size: 128 }
+      }
+    }
+  }
+
+  fn hash(&self, data: ~[u8]) -> ~Digest {
+    let hash_func = self.engine;
     Digest::new(
       unsafe {
         vec::from_buf(
@@ -31,45 +40,75 @@ fn hash(data: ~[u8], hash_func: &fn(*u8, libc::c_uint, *u8) -> *u8, len: uint) -
             vec::raw::to_ptr(data),
             data.len() as libc::c_uint, ptr::null()
           ),
-          len
+          self.digest_size
         )
       }
     )
+  }
+}
+
+struct Digest { digest: ~[u8] }
+
+impl Digest {
+  fn new(digest: ~[u8]) -> ~Digest { return ~Digest{ digest: digest } }
+
+  fn hexdigest(&self) -> ~str {
+    let mut acc = ~"";
+    for self.digest.each |&byte| { acc += fmt!("%02x", byte as uint); }
+    acc
+  }
+}
+
+fn hash(engine_name: HashMethod, data: ~[u8]) -> ~Digest {
+  let details   = HashEngine::by_name(engine_name);
+  let hash_func = details.engine;
+
+  Digest::new(
+    unsafe {
+      vec::from_buf(
+        hash_func(
+          vec::raw::to_ptr(data),
+          data.len() as libc::c_uint, ptr::null()
+        ),
+        details.digest_size
+      )
+    }
+  )
 }
 
 fn sha1(data: ~[u8]) -> ~Digest {
   unsafe {
-    hash(data, crypto::SHA1, 20)
+    HashEngine::by_name(SHA1).hash(data)
   }
 }
 
 fn sha224(data: ~[u8]) -> ~Digest {
   unsafe {
-    hash(data, crypto::SHA224, 28)
+    HashEngine::by_name(SHA224).hash(data)
   }
 }
 
 fn sha256(data: ~[u8]) -> ~Digest {
   unsafe {
-    hash(data, crypto::SHA256, 32)
+    HashEngine::by_name(SHA256).hash(data)
   }
 }
 
 fn sha384(data: ~[u8]) -> ~Digest {
   unsafe {
-    hash(data, crypto::SHA384, 48)
+    HashEngine::by_name(SHA384).hash(data)
   }
 }
 
 fn sha512(data: ~[u8]) -> ~Digest {
   unsafe {
-    hash(data, crypto::SHA512, 64)
+    HashEngine::by_name(SHA512 ).hash(data)
   }
 }
 
 fn md5(data: ~[u8]) -> ~Digest {
   unsafe {
-    hash(data, crypto::MD5, 16)
+    HashEngine::by_name(MD5).hash(data)
   }
 }
 
