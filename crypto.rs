@@ -58,11 +58,17 @@ fn xor_with(subject: &str, val: u8) -> ~[u8] {
   do subject.to_bytes().map |&c| { val ^ c }
 }
 
-fn hmac(key: ~str, message: ~str) -> ~str {
-  let block_size = 64;
+fn hmac_sha1(key: ~str, message: ~str) -> ~Digest {
+  hmac(key, message, 64, sha1)
+}
 
+fn hmac_md5(key: ~str, message: ~str) -> ~Digest {
+  hmac(key, message, 64, md5)
+}
+
+fn hmac(key: ~str, message: ~str, block_size: uint, hash_func: &fn(~[u8]) -> ~Digest) -> ~Digest {
   let computed_key: &str = if key.len() > block_size {
-    sha1(key.to_bytes()).hexdigest() // TODO this should be .digest more likely
+    hash_func(key.to_bytes()).hexdigest() // TODO this should be .digest more likely
   } else if key.len() < block_size {
     key + str::from_bytes(vec::from_elem(block_size - key.len(), 0))
   } else {
@@ -73,7 +79,7 @@ fn hmac(key: ~str, message: ~str) -> ~str {
   let i_key_pad = xor_with(computed_key, 0x36);
   let bin_message = message.to_bytes();
 
-  sha1(o_key_pad + sha1(i_key_pad + bin_message).digest).hexdigest()
+  hash_func(o_key_pad + hash_func(i_key_pad + bin_message).digest)
 }
 
 fn main() {
@@ -92,9 +98,9 @@ fn test_md5() {
 }
 
 #[test]
-fn test_hmac() {
+fn test_hmac_sha1() {
   assert_eq!(
-    hmac(~"my key", ~"some data to hmac"), 
+    hmac_sha1(~"my key", ~"some data to hmac").hexdigest(), 
     ~"331c9bf4d7dc8ad7e9bab2f566c8612042a9f4e2"
   )
 }
@@ -122,8 +128,8 @@ fn test_hmac_sha512() {
   );
 }
 
+*/
 #[test]
 fn test_hmac_md5() {
-  assert_eq!(hmac(MD5, ~"my key", ~"some data to hmac"), ~"befd13e00ee07549520ade402c664a3a");
+  assert_eq!(hmac_md5(~"my key", ~"some data to hmac").hexdigest(), ~"befd13e00ee07549520ade402c664a3a");
 }
-*/
