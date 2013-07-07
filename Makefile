@@ -10,3 +10,6 @@ all: crypto
 test:
 	rustc -L `pwd` --test crypto.rs -o cryptotest
 	./cryptotest
+
+clean:
+	rm -rf a.out.dSYM/ crypto crypto.dSYM/ cryptotest cryptotest.dSYM/ cryptotest~ cryptotest~.dSYM/
