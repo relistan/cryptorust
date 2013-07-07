@@ -67,6 +67,7 @@ fn hmac_md5(key: ~str, message: ~str) -> ~Digest {
 }
 
 fn hmac(key: ~str, message: ~str, block_size: uint, hash_func: &fn(~[u8]) -> ~Digest) -> ~Digest {
+
   let computed_key: &str = if key.len() > block_size {
     hash_func(key.to_bytes()).hexdigest() // TODO this should be .digest more likely
   } else if key.len() < block_size {
@@ -107,11 +108,6 @@ fn test_hmac_sha1() {
 
 
 /*
-#[test]
-fn test_hmac_sha1() {
-  assert_eq!(hmac(SHA1, ~"my key", ~"some data to hmac"), ~"331c9bf4d7dc8ad7e9bab2f566c8612042a9f4e2");
-}
-
 #[test]
 fn test_hmac_sha256() {
   assert_eq!(
