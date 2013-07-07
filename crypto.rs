@@ -18,17 +18,17 @@ impl Digest {
 }
 
 fn hash(data: ~[u8], hash_func: &fn(*u8, libc::c_uint, *u8) -> *u8, len: uint) -> ~Digest {
-  unsafe {
     Digest::new(
-      vec::from_buf(
-        hash_func(
-          vec::raw::to_ptr(data),
-          data.len() as libc::c_uint, ptr::null()
-        ),
-        len
-      )
+      unsafe {
+        vec::from_buf(
+          hash_func(
+            vec::raw::to_ptr(data),
+            data.len() as libc::c_uint, ptr::null()
+          ),
+          len
+        )
+      }
     )
-  }
 }
 
 fn sha1(data: ~[u8]) -> ~Digest {
