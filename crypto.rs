@@ -1,19 +1,8 @@
 extern mod std;
 
-enum HashEngine { SHA1, SHA128, SHA224, SHA256, SHA384, SHA512, MD5 }
-
 extern mod crypto {
   fn SHA1(src: *u8, sz: libc::c_uint, out: *u8) -> *u8;
   fn MD5(src: *u8, sz: libc::c_uint, out: *u8) -> *u8;
-}
-
-extern mod cryptobindings {
-  fn wrap_HMAC(method: HashEngine, 
-    key: *u8, 
-    key_size: libc::size_t, 
-    data: *u8,
-    size: libc::size_t,
-    target: *u8) -> libc::c_uint;
 }
 
 struct Digest { digest: ~[u8] }
