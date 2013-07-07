@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <openssl/hmac.h>
 
-typedef enum { SHA1, SHA128, SHA224, SHA256, SHA512, MD5 } hmac_engine_t;
+typedef enum { SHA1, SHA128, SHA224, SHA256, SHA384, SHA512, MD5 } hmac_engine_t;
 
 u_int32_t wrap_HMAC(hmac_engine_t method, char *key, size_t key_size, char *data, size_t size, char *target) {
 
@@ -10,9 +10,10 @@ u_int32_t wrap_HMAC(hmac_engine_t method, char *key, size_t key_size, char *data
 
 	switch(method) {
 		case SHA1:   hash_engine = EVP_sha1();   digest_size = 20; break;
-		case SHA224: hash_engine = EVP_sha224(); digest_size = 20; break;
-		case SHA256: hash_engine = EVP_sha256(); digest_size = 20; break;
-		case SHA512: hash_engine = EVP_sha512(); digest_size = 20; break;
+		case SHA224: hash_engine = EVP_sha224(); digest_size = 28; break;
+		case SHA256: hash_engine = EVP_sha256(); digest_size = 32; break;
+		case SHA384: hash_engine = EVP_sha384(); digest_size = 48; break;
+		case SHA512: hash_engine = EVP_sha512(); digest_size = 64; break;
 		case MD5:    hash_engine = EVP_md5();    digest_size = 16; break;
 		default:     return -1;
 	}
@@ -31,8 +32,8 @@ u_int32_t wrap_HMAC(hmac_engine_t method, char *key, size_t key_size, char *data
 
 /*
 int main() {
-	hmac_engine_t engine = MD5;
-	char mdString[20 * 2];
+	hmac_engine_t engine = SHA512;
+	char mdString[64 * 2 + 1];
 
 	printf("%d\n", wrap_HMAC(engine, "0", 1, "testing!", 8, mdString));
 	printf("--%s--\n", mdString);
