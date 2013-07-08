@@ -48,7 +48,7 @@ impl HashEngine {
 
   fn hmac(&self, key: ~str, message: ~str) -> ~Digest {
     let computed_key: &str = match key.len() {
-      _ if key.len() > self.block_size => self.hash(key.to_bytes()).hexdigest(), // TODO this should be .digest more likely
+      _ if key.len() > self.block_size => self.hash(key.to_bytes()).hexdigest(),
       _ if key.len() < self.block_size => key + str::from_bytes(vec::from_elem(self.block_size - key.len(), 0)),
       _ => key
     };
