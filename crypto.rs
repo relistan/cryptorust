@@ -53,8 +53,8 @@ impl HashEngine {
 
   fn hmac(&self, key: ~[u8], message: ~[u8]) -> ~Digest {
     let computed_key = match key.len() {
-      _ if key.len() > self.block_size => self.hash(key).digest,
-      _ if key.len() < self.block_size => key + vec::from_elem(self.block_size - key.len(), 0),
+      _ if key.len() > self.block_size => self.zero_pad(self.hash(key).digest),
+      _ if key.len() < self.block_size => self.zero_pad(key),
       _ => key
     };
   
@@ -66,6 +66,10 @@ impl HashEngine {
 
   priv fn xor_with(subject: &[u8], val: u8) -> ~[u8] {
     do subject.map |&c| { val ^ c }
+  }
+
+  priv fn zero_pad(&self, subject: ~[u8]) -> ~[u8] {
+  	subject + vec::from_elem(self.block_size - subject.len(), 0)
   }
 }
 
