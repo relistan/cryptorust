@@ -69,7 +69,7 @@ impl HashEngine {
   }
 
   priv fn zero_pad(&self, subject: ~[u8]) -> ~[u8] {
-  	subject + vec::from_elem(self.block_size - subject.len(), 0)
+    subject + vec::from_elem(self.block_size - subject.len(), 0)
   }
 }
 
