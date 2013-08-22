@@ -53,8 +53,8 @@ impl HashEngine {
 
   fn hmac(&self, key: ~[u8], message: ~[u8]) -> ~Digest {
     let computed_key = match key.len() {
-      _ if key.len() > self.block_size => self.zero_pad(self.hash(key).digest),
-      _ if key.len() < self.block_size => self.zero_pad(key),
+      len if len > self.block_size => self.zero_pad(self.hash(key).digest),
+      len if len < self.block_size => self.zero_pad(key),
       _ => key
     };
   
