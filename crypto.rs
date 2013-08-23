@@ -38,6 +38,7 @@ impl HashEngine {
 
   fn hash(&self, data: ~[u8]) -> ~Digest {
     let hash_func = self.engine;
+
     Digest::new(
       unsafe {
         vec::from_buf(
@@ -52,10 +53,10 @@ impl HashEngine {
   }
 
   fn hmac(&self, key: ~[u8], message: ~[u8]) -> ~Digest {
-    let computed_key = match key.len() {
-      len if len > self.block_size => self.zero_pad(self.hash(key).digest),
-      len if len < self.block_size => self.zero_pad(key),
-      _ => key
+    let computed_key = match key.len().cmp(&self.block_size) {
+      Less => self.zero_pad(key),
+      Equal => key,
+      Greater => self.zero_pad(self.hash(key).digest),
     };
   
     let o_key_pad = HashEngine::xor_with(computed_key, 0x5c);
